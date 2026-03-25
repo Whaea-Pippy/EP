@@ -6,196 +6,127 @@
     <title>Algebraic Substitution</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Space+Grotesk:wght@500&display=swap');
-
-        :root {
-            --tile-size: 68px;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
+        :root { --tile-size: 68px; }
+        
+        * { box-sizing: border-box; }
+        
         body {
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             font-family: 'Inter', system-ui, sans-serif;
             background: linear-gradient(180deg, #f8fafc 0%, #e0f2fe 100%);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
         }
-
+        
         #app {
-            width: 100%;
-            max-width: 920px;
-            background: white;
-            border-radius: 24px;
+            width: 100%; max-width: 920px;
+            background: white; border-radius: 24px;
             box-shadow: 25px 25px 50px -12px rgb(15 23 42 / 0.15);
-            overflow: hidden;
             padding: 32px 40px;
         }
-
+        
         h1 {
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 2.75rem;
-            font-weight: 500;
-            text-align: center;
-            margin: 0 0 8px;
+            font-size: 2.75rem; font-weight: 500;
+            text-align: center; margin: 0 0 8px;
             background: linear-gradient(to right, #0ea5e9, #8b5cf6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -1px;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-
-        .subtitle {
-            text-align: center;
-            color: #64748b;
-            font-size: 1.1rem;
-            margin-bottom: 32px;
-        }
-
+        
+        .subtitle { text-align: center; color: #64748b; margin-bottom: 32px; }
+        
         #tile-row {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            margin-bottom: 48px;
-            padding: 12px 0;
-            background: #f8fafc;
-            border-radius: 20px;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+            display: flex; justify-content: center; gap: 16px;
+            margin-bottom: 48px; padding: 12px 0;
+            background: #f8fafc; border-radius: 20px;
         }
-
-        .slot {
-            width: var(--tile-size);
-            height: var(--tile-size);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 16px;
-        }
-
+        
+        .slot { width: var(--tile-size); height: var(--tile-size); }
+        
         .tile {
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.1rem;
-            font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.1rem; font-weight: 700;
             box-shadow: 6px 6px 12px -4px rgb(15 23 42 / 0.2),
                         inset 0 -3px 4px rgba(255,255,255,0.4);
             cursor: pointer;
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s, color 0.3s;
+            transition: all 0.3s;
             user-select: none;
         }
-
-        .tile:hover {
-            transform: scale(1.08) translateY(-2px);
-        }
-
+        .tile:hover { transform: scale(1.08) translateY(-2px); }
+        .tile.faded { opacity: 0.35; cursor: not-allowed; }
+        
         #equation-area {
-            background: #f8fafc;
-            border-radius: 20px;
-            padding: 32px 40px;
-            margin-bottom: 32px;
-            min-height: 110px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 10px 15px -3px rgb(15 23 42 / 0.1);
+            background: #f8fafc; border-radius: 20px;
+            padding: 32px 40px; margin-bottom: 32px;
+            min-height: 110px; display: flex; align-items: center; justify-content: center;
         }
-
+        
         .equation {
-            display: flex;
-            align-items: center;
+            display: flex; align-items: center;
+            font-size: 3.2rem; font-weight: 600;
+            font-family: 'Space Grotesk', sans-serif; gap: 8px;
+        }
+        
+        .equation .tile {
+            width: var(--tile-size); height: var(--tile-size);
+            border-radius: 14px;
+        }
+        
+        .times {
+            color: #ef4444;          /* deep red */
             font-size: 3.2rem;
             font-weight: 600;
-            font-family: 'Space Grotesk', sans-serif;
-            white-space: nowrap;
-            gap: 12px;
-            color: #1e2937;
+            margin: 0 4px;
         }
-
-        .math-number, .math-op { font-size: 3.2rem; }
         
         #steps-area {
-            background: white;
-            border: 3px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 24px 32px;
-            min-height: 180px;
-            margin-bottom: 32px;
+            background: white; border: 3px solid #e2e8f0;
+            border-radius: 16px; padding: 24px 32px; min-height: 180px;
         }
-
+        
         .step {
-            display: flex;
-            align-items: center;
-            font-size: 2.4rem;
-            font-family: 'Space Grotesk', sans-serif;
-            margin: 14px 0;
-            color: #1e2937;
-            animation: fadeIn 0.4s ease-out;
+            display: flex; align-items: center;
+            font-size: 2.4rem; font-family: 'Space Grotesk', sans-serif;
+            margin: 14px 0; animation: fadeIn 0.4s ease-out;
         }
-
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        .step .equals {
-            width: 52px;
-            text-align: right;
-            margin-right: 24px;
-            font-weight: 600;
-            color: #64748b;
-        }
-
-        .controls { display: flex; justify-content: center; gap: 16px; }
-
+        
+        .step .equals { width: 52px; text-align: right; margin-right: 24px; color: #64748b; font-weight: 600; }
+        
         button {
             background: linear-gradient(to right, #0ea5e9, #8b5cf6);
-            color: white;
-            border: none;
-            padding: 16px 36px;
-            font-size: 1.25rem;
-            font-weight: 600;
-            border-radius: 9999px;
+            color: white; border: none; padding: 16px 36px;
+            font-size: 1.25rem; font-weight: 600; border-radius: 9999px;
             cursor: pointer;
-            box-shadow: 10px 10px 20px -8px rgb(139 92 246);
-            transition: all 0.3s;
         }
-
-        button:hover { transform: translateY(-3px); box-shadow: 15px 15px 25px -8px rgb(139 92 246); }
-
-        .info { text-align: center; font-size: 1rem; color: #64748b; margin-top: 12px; }
+        button:hover { transform: translateY(-3px); }
     </style>
 </head>
 <body>
     <div id="app">
         <h1>Algebraic Substitution</h1>
-        <p class="subtitle">Click a tile to substitute • Try different numbers to see the result change</p>
-
+        <p class="subtitle">Click any tile to substitute • Invisible × becomes visible</p>
+        
         <div id="tile-row"></div>
-
+        
         <div id="equation-area">
-            <div id="equation-display"></div>
+            <div id="equation-display" class="equation"></div>
         </div>
-
+        
         <div id="steps-area">
             <div id="steps-container"></div>
         </div>
-
+        
         <div class="controls">
             <button id="new-equation-btn">Next Equation</button>
-        </div>
-
-        <div class="info">
-            Animation shows the variable being replaced in real-time.
         </div>
     </div>
 
     <script>
         const PRESETS = ["3x + 2", "x + 5", "2x + 3", "x - 4", "5x - 2", "10 - x", "4x + 1", "2 + x", "3x", "x - 1"];
+        
         const COLORS = {
             'x': { bg: '#0ea5e9', text: '#fff' },
             'a': { bg: '#10b981', text: '#fff' },
@@ -210,6 +141,7 @@
 
         let currentIndex = 0;
         let currentExpr = PRESETS[0];
+        let currentSubTile = null;
         let animating = false;
 
         function tokenize(expr) {
@@ -240,9 +172,17 @@
             animating = true;
 
             const clickedTile = e.currentTarget;
-            const val = clickedTile.textContent;
-            const isNum = /^[0-9]$/.test(val);
+            const subValue = clickedTile.textContent;
+            const isNum = /^[0-9]$/.test(subValue);
+
+            if (currentSubTile && currentSubTile !== clickedTile) {
+                currentSubTile.classList.remove('faded');
+            }
+            clickedTile.classList.add('faded');
+            currentSubTile = clickedTile;
+
             const varTile = document.querySelector('.equation .tile');
+            if (!varTile) { animating = false; return; }
 
             const sourceRect = clickedTile.getBoundingClientRect();
             const targetRect = varTile.getBoundingClientRect();
@@ -254,30 +194,88 @@
             flyer.style.width = `${sourceRect.width}px`;
             flyer.style.height = `${sourceRect.height}px`;
             flyer.style.zIndex = '1000';
-            flyer.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+            flyer.style.transition = 'all 0.65s cubic-bezier(0.4, 0, 0.2, 1)';
             document.body.appendChild(flyer);
 
             requestAnimationFrame(() => {
                 flyer.style.left = `${targetRect.left}px`;
                 flyer.style.top = `${targetRect.top}px`;
-                varTile.style.opacity = '0.3';
+                varTile.style.opacity = '0.25';
             });
 
             setTimeout(() => {
-                varTile.textContent = val;
-                varTile.style.backgroundColor = flyer.style.backgroundColor;
-                varTile.style.color = flyer.style.color;
+                varTile.textContent = subValue;
+                varTile.style.backgroundColor = COLORS[subValue].bg;
+                varTile.style.color = COLORS[subValue].text;
                 varTile.style.opacity = '1';
                 varTile.style.transform = 'scale(1.2)';
-                
-                updateSteps(val, isNum);
+
+                updateEquationDisplay(subValue);
+                updateSteps(subValue, isNum);
+
                 document.body.removeChild(flyer);
-                
+
                 setTimeout(() => {
                     varTile.style.transform = 'scale(1)';
                     animating = false;
-                }, 200);
-            }, 600);
+                }, 250);
+            }, 650);
+        }
+
+        // NEW: Update the big equation display with × when needed
+        function updateEquationDisplay(subValue) {
+            const display = document.getElementById('equation-display');
+            display.innerHTML = '';
+            const eq = document.createElement('div');
+            eq.className = 'equation';
+
+            const tokens = tokenize(currentExpr);
+            let hasCoeff = false;
+            let varIndex = -1;
+
+            for (let i = 0; i < tokens.length; i++) {
+                if (tokens[i].type === 'var') {
+                    varIndex = i;
+                    if (i > 0 && tokens[i-1].type === 'number') hasCoeff = true;
+                    break;
+                }
+            }
+
+            for (let i = 0; i < tokens.length; i++) {
+                const tok = tokens[i];
+                if (tok.type === 'var') {
+                    if (hasCoeff) {
+                        // Show coefficient
+                        const coeffSpan = document.createElement('span');
+                        coeffSpan.textContent = tokens[i-1].value;
+                        eq.appendChild(coeffSpan);
+
+                        // Show red ×
+                        const times = document.createElement('span');
+                        times.className = 'times';
+                        times.textContent = '×';
+                        eq.appendChild(times);
+                    }
+                    // Show substituted value as tile
+                    const subTile = createTile(subValue);
+                    eq.appendChild(subTile);
+                } 
+                else if (tok.type === 'number' && i === varIndex - 1 && hasCoeff) {
+                    continue; // skip original coefficient
+                } 
+                else if (tok.type === 'op') {
+                    const opSpan = document.createElement('span');
+                    opSpan.textContent = " " + tok.value + " ";
+                    eq.appendChild(opSpan);
+                } 
+                else {
+                    const span = document.createElement('span');
+                    span.textContent = tok.value;
+                    eq.appendChild(span);
+                }
+            }
+
+            display.appendChild(eq);
         }
 
         function updateSteps(subValue, isNumberSub) {
@@ -285,37 +283,54 @@
             const container = document.getElementById('steps-container');
             container.innerHTML = '';
 
-            // Step 1: Substitution display
-            let step1Text = "";
-            const hasCoeff = tokens.some((t, i) => i < tokens.length - 1 && t.type === 'number' && tokens[i+1].type === 'var');
-            
-            tokens.forEach(tok => {
+            let step1 = "";
+            let hasCoeff = false;
+            let varIndex = -1;
+
+            for (let i = 0; i < tokens.length; i++) {
+                if (tokens[i].type === 'var') {
+                    varIndex = i;
+                    if (i > 0 && tokens[i-1].type === 'number') hasCoeff = true;
+                    break;
+                }
+            }
+
+            for (let i = 0; i < tokens.length; i++) {
+                const tok = tokens[i];
                 if (tok.type === 'var') {
-                    if (hasCoeff && isNumberSub) step1Text += " × " + subValue;
-                    else step1Text += subValue;
-                } else if (tok.type === 'op') step1Text += " " + tok.value + " ";
-                else step1Text += tok.value;
-            });
-            renderStep(step1Text);
+                    if (hasCoeff) {
+                        step1 += tokens[i-1].value + " × " + subValue;
+                    } else {
+                        step1 += subValue;
+                    }
+                } else if (tok.type === 'number' && i === varIndex - 1 && hasCoeff) {
+                    continue;
+                } else if (tok.type === 'op') {
+                    step1 += " " + tok.value + " ";
+                } else {
+                    step1 += tok.value;
+                }
+            }
+
+            renderStep(step1.trim());
 
             if (!isNumberSub) return;
 
-            // Step 2 & 3: Calculation
             const val = parseInt(subValue);
-            const varIdx = tokens.findIndex(t => t.type === 'var');
-            const coeff = (varIdx > 0 && tokens[varIdx-1].type === 'number') ? parseInt(tokens[varIdx-1].value) : 1;
+            const coeff = hasCoeff ? parseInt(tokens[varIndex-1].value) : 1;
             const product = coeff * val;
 
             if (tokens.length > 1) {
                 const opTok = tokens.find(t => t.type === 'op');
-                const numTok = tokens.find((t, idx) => t.type === 'number' && idx !== (varIdx - 1));
+                const numTok = tokens.find((t, idx) => t.type === 'number' && idx !== (varIndex - 1));
                 const otherNum = numTok ? parseInt(numTok.value) : 0;
-                
+
                 if (coeff !== 1) renderStep(`${product} ${opTok.value} ${otherNum}`);
-                
-                const final = (opTok.value === '+') ? 
-                    (varIdx > 1 ? otherNum + val : product + otherNum) : 
-                    (varIdx > 1 ? otherNum - val : product - otherNum);
+
+                const final = (opTok.value === '+') 
+                    ? (varIndex > 1 ? otherNum + val : product + otherNum)
+                    : (varIndex > 1 ? otherNum - val : product - otherNum);
+
                 renderStep(final);
             } else if (coeff !== 1) {
                 renderStep(product);
@@ -331,22 +346,12 @@
 
         function loadEquation() {
             currentExpr = PRESETS[currentIndex];
-            const display = document.getElementById('equation-display');
-            display.innerHTML = '';
-            const container = document.createElement('div');
-            container.className = 'equation';
-            
-            tokenize(currentExpr).forEach(tok => {
-                if (tok.type === 'var') container.appendChild(createTile('x'));
-                else {
-                    const s = document.createElement('span');
-                    s.className = tok.type === 'number' ? 'math-number' : 'math-op';
-                    s.textContent = tok.value;
-                    container.appendChild(s);
-                }
-            });
-            display.appendChild(container);
+            currentSubTile = null;
+
+            updateEquationDisplay('x');   // start with x
             document.getElementById('steps-container').innerHTML = '';
+
+            document.querySelectorAll('.tile').forEach(t => t.classList.remove('faded'));
         }
 
         function init() {
@@ -355,11 +360,13 @@
                 const slot = document.createElement('div');
                 slot.className = 'slot';
                 const tile = createTile(char);
-                if (char !== 'x') tile.addEventListener('click', handleSubstitution);
+                tile.addEventListener('click', handleSubstitution);
                 slot.appendChild(tile);
                 row.appendChild(slot);
             });
+
             loadEquation();
+
             document.getElementById('new-equation-btn').onclick = () => {
                 currentIndex = (currentIndex + 1) % PRESETS.length;
                 loadEquation();
