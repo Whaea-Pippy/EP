@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algebraic Substitution</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Space+Grotesk:wght@500&display=swap');
+
+        :root {
+            --tile-size: 68px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, sans-serif;
+            background: linear-gradient(180deg, #f8fafc 0%, #e0f2fe 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 920px;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 25px 25px 50px -12px rgb(15 23 42 / 0.15);
+            overflow: hidden;
+            padding: 32px 40px;
+        }
+
+        h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.75rem;
+            font-weight: 500;
+            text-align: center;
+            margin: 0 0 8px;
+            background: linear-gradient(to right, #0ea5e9, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #64748b;
+            font-size: 1.1rem;
+            margin-bottom: 32px;
+        }
+
+        #tile-row {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 48px;
+            padding: 12px 0;
+            background: #f8fafc;
+            border-radius: 20px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .slot {
+            width: var(--tile-size);
+            height: var(--tile-size);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+        }
+
+        .tile {
+            width: 100%;
+            height: 100%;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.1rem;
+            font-weight: 700;
+            box-shadow: 6px 6px 12px -4px rgb(15 23 42 / 0.2),
+                        inset 0 -3px 4px rgba(255,255,255,0.4);
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s, color 0.3s;
+            user-select: none;
+        }
+
+        .tile:hover {
+            transform: scale(1.08) translateY(-2px);
+        }
+
+        #equation-area {
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 32px 40px;
+            margin-bottom: 32px;
+            min-height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 15px -3px rgb(15 23 42 / 0.1);
+        }
+
+        .equation {
+            display: flex;
+            align-items: center;
+            font-size: 3.2rem;
+            font-weight: 600;
+            font-family: 'Space Grotesk', sans-serif;
+            white-space: nowrap;
+            gap: 12px;
+            color: #1e2937;
+        }
+
+        .math-number, .math-op { font-size: 3.2rem; }
+        
+        #steps-area {
+            background: white;
+            border: 3px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 24px 32px;
+            min-height: 180px;
+            margin-bottom: 32px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            font-size: 2.4rem;
+            font-family: 'Space Grotesk', sans-serif;
+            margin: 14px 0;
+            color: #1e2937;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .step .equals {
+            width: 52px;
+            text-align: right;
+            margin-right: 24px;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .controls { display: flex; justify-content: center; gap: 16px; }
+
+        button {
+            background: linear-gradient(to right, #0ea5e9, #8b5cf6);
+            color: white;
+            border: none;
+            padding: 16px 36px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            border-radius: 9999px;
+            cursor: pointer;
+            box-shadow: 10px 10px 20px -8px rgb(139 92 246);
+            transition: all 0.3s;
+        }
+
+        button:hover { transform: translateY(-3px); box-shadow: 15px 15px 25px -8px rgb(139 92 246); }
+
+        .info { text-align: center; font-size: 1rem; color: #64748b; margin-top: 12px; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>Algebraic Substitution</h1>
+        <p class="subtitle">Click a tile to substitute • Try different numbers to see the result change</p>
+
+        <div id="tile-row"></div>
+
+        <div id="equation-area">
+            <div id="equation-display"></div>
+        </div>
+
+        <div id="steps-area">
+            <div id="steps-container"></div>
+        </div>
+
+        <div class="controls">
+            <button id="new-equation-btn">Next Equation</button>
+        </div>
+
+        <div class="info">
+            Animation shows the variable being replaced in real-time.
+        </div>
+    </div>
+
+    <script>
+        const PRESETS = ["3x + 2", "x + 5", "2x + 3", "x - 4", "5x - 2", "10 - x", "4x + 1", "2 + x", "3x", "x - 1"];
+        const COLORS = {
+            'x': { bg: '#0ea5e9', text: '#fff' },
+            'a': { bg: '#10b981', text: '#fff' },
+            'b': { bg: '#8b5cf6', text: '#fff' },
+            '0': { bg: '#64748b', text: '#fff' },
+            '1': { bg: '#f59e0b', text: '#1e2937' },
+            '2': { bg: '#ec4899', text: '#fff' },
+            '3': { bg: '#ef4444', text: '#fff' },
+            '4': { bg: '#14b8a6', text: '#fff' },
+            '5': { bg: '#3b82f6', text: '#fff' }
+        };
+
+        let currentIndex = 0;
+        let currentExpr = PRESETS[0];
+        let animating = false;
+
+        function tokenize(expr) {
+            const tokens = [];
+            const regex = /([0-9]+|x|[\+\-])/g;
+            let m;
+            while ((m = regex.exec(expr)) !== null) {
+                const val = m[1];
+                if (/[0-9]/.test(val)) tokens.push({ type: 'number', value: val });
+                else if (val === 'x') tokens.push({ type: 'var', value: 'x' });
+                else tokens.push({ type: 'op', value: val });
+            }
+            return tokens;
+        }
+
+        function createTile(content) {
+            const tile = document.createElement('div');
+            tile.className = 'tile';
+            const cfg = COLORS[content] || COLORS['5'];
+            tile.style.backgroundColor = cfg.bg;
+            tile.style.color = cfg.text;
+            tile.textContent = content;
+            return tile;
+        }
+
+        function handleSubstitution(e) {
+            if (animating) return;
+            animating = true;
+
+            const clickedTile = e.currentTarget;
+            const val = clickedTile.textContent;
+            const isNum = /^[0-9]$/.test(val);
+            const varTile = document.querySelector('.equation .tile');
+
+            const sourceRect = clickedTile.getBoundingClientRect();
+            const targetRect = varTile.getBoundingClientRect();
+
+            const flyer = clickedTile.cloneNode(true);
+            flyer.style.position = 'fixed';
+            flyer.style.left = `${sourceRect.left}px`;
+            flyer.style.top = `${sourceRect.top}px`;
+            flyer.style.width = `${sourceRect.width}px`;
+            flyer.style.height = `${sourceRect.height}px`;
+            flyer.style.zIndex = '1000';
+            flyer.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+            document.body.appendChild(flyer);
+
+            requestAnimationFrame(() => {
+                flyer.style.left = `${targetRect.left}px`;
+                flyer.style.top = `${targetRect.top}px`;
+                varTile.style.opacity = '0.3';
+            });
+
+            setTimeout(() => {
+                varTile.textContent = val;
+                varTile.style.backgroundColor = flyer.style.backgroundColor;
+                varTile.style.color = flyer.style.color;
+                varTile.style.opacity = '1';
+                varTile.style.transform = 'scale(1.2)';
+                
+                updateSteps(val, isNum);
+                document.body.removeChild(flyer);
+                
+                setTimeout(() => {
+                    varTile.style.transform = 'scale(1)';
+                    animating = false;
+                }, 200);
+            }, 600);
+        }
+
+        function updateSteps(subValue, isNumberSub) {
+            const tokens = tokenize(currentExpr);
+            const container = document.getElementById('steps-container');
+            container.innerHTML = '';
+
+            // Step 1: Substitution display
+            let step1Text = "";
+            const hasCoeff = tokens.some((t, i) => i < tokens.length - 1 && t.type === 'number' && tokens[i+1].type === 'var');
+            
+            tokens.forEach(tok => {
+                if (tok.type === 'var') {
+                    if (hasCoeff && isNumberSub) step1Text += " × " + subValue;
+                    else step1Text += subValue;
+                } else if (tok.type === 'op') step1Text += " " + tok.value + " ";
+                else step1Text += tok.value;
+            });
+            renderStep(step1Text);
+
+            if (!isNumberSub) return;
+
+            // Step 2 & 3: Calculation
+            const val = parseInt(subValue);
+            const varIdx = tokens.findIndex(t => t.type === 'var');
+            const coeff = (varIdx > 0 && tokens[varIdx-1].type === 'number') ? parseInt(tokens[varIdx-1].value) : 1;
+            const product = coeff * val;
+
+            if (tokens.length > 1) {
+                const opTok = tokens.find(t => t.type === 'op');
+                const numTok = tokens.find((t, idx) => t.type === 'number' && idx !== (varIdx - 1));
+                const otherNum = numTok ? parseInt(numTok.value) : 0;
+                
+                if (coeff !== 1) renderStep(`${product} ${opTok.value} ${otherNum}`);
+                
+                const final = (opTok.value === '+') ? 
+                    (varIdx > 1 ? otherNum + val : product + otherNum) : 
+                    (varIdx > 1 ? otherNum - val : product - otherNum);
+                renderStep(final);
+            } else if (coeff !== 1) {
+                renderStep(product);
+            }
+        }
+
+        function renderStep(text) {
+            const d = document.createElement('div');
+            d.className = 'step';
+            d.innerHTML = `<span class="equals">=</span><span class="expr">${text}</span>`;
+            document.getElementById('steps-container').appendChild(d);
+        }
+
+        function loadEquation() {
+            currentExpr = PRESETS[currentIndex];
+            const display = document.getElementById('equation-display');
+            display.innerHTML = '';
+            const container = document.createElement('div');
+            container.className = 'equation';
+            
+            tokenize(currentExpr).forEach(tok => {
+                if (tok.type === 'var') container.appendChild(createTile('x'));
+                else {
+                    const s = document.createElement('span');
+                    s.className = tok.type === 'number' ? 'math-number' : 'math-op';
+                    s.textContent = tok.value;
+                    container.appendChild(s);
+                }
+            });
+            display.appendChild(container);
+            document.getElementById('steps-container').innerHTML = '';
+        }
+
+        function init() {
+            const row = document.getElementById('tile-row');
+            ['x', 'a', 'b', '0', '1', '2', '3', '4', '5'].forEach(char => {
+                const slot = document.createElement('div');
+                slot.className = 'slot';
+                const tile = createTile(char);
+                if (char !== 'x') tile.addEventListener('click', handleSubstitution);
+                slot.appendChild(tile);
+                row.appendChild(slot);
+            });
+            loadEquation();
+            document.getElementById('new-equation-btn').onclick = () => {
+                currentIndex = (currentIndex + 1) % PRESETS.length;
+                loadEquation();
+            };
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
