@@ -75,10 +75,10 @@
         }
         
         .times {
-            color: #ef4444;          /* deep red */
+            color: #ef4444;      /* deep red */
             font-size: 3.2rem;
             font-weight: 600;
-            margin: 0 4px;
+            margin: 0 6px;
         }
         
         #steps-area {
@@ -107,7 +107,7 @@
 <body>
     <div id="app">
         <h1>Algebraic Substitution</h1>
-        <p class="subtitle">Click any tile to substitute • Invisible × becomes visible</p>
+        <p class="subtitle">Click a number to substitute • Invisible × becomes visible (red)</p>
         
         <div id="tile-row"></div>
         
@@ -173,7 +173,7 @@
 
             const clickedTile = e.currentTarget;
             const subValue = clickedTile.textContent;
-            const isNum = /^[0-9]$/.test(subValue);
+            const isNumber = /^[0-9]$/.test(subValue);
 
             if (currentSubTile && currentSubTile !== clickedTile) {
                 currentSubTile.classList.remove('faded');
@@ -210,8 +210,8 @@
                 varTile.style.opacity = '1';
                 varTile.style.transform = 'scale(1.2)';
 
-                updateEquationDisplay(subValue);
-                updateSteps(subValue, isNum);
+                updateEquationDisplay(subValue, isNumber);
+                updateSteps(subValue, isNumber);
 
                 document.body.removeChild(flyer);
 
@@ -222,8 +222,7 @@
             }, 650);
         }
 
-        // NEW: Update the big equation display with × when needed
-        function updateEquationDisplay(subValue) {
+        function updateEquationDisplay(subValue, isNumber) {
             const display = document.getElementById('equation-display');
             display.innerHTML = '';
             const eq = document.createElement('div');
@@ -244,23 +243,23 @@
             for (let i = 0; i < tokens.length; i++) {
                 const tok = tokens[i];
                 if (tok.type === 'var') {
-                    if (hasCoeff) {
+                    if (hasCoeff && isNumber) {
                         // Show coefficient
                         const coeffSpan = document.createElement('span');
                         coeffSpan.textContent = tokens[i-1].value;
                         eq.appendChild(coeffSpan);
 
-                        // Show red ×
+                        // Show red × ONLY when a number is substituted
                         const times = document.createElement('span');
                         times.className = 'times';
                         times.textContent = '×';
                         eq.appendChild(times);
                     }
-                    // Show substituted value as tile
+                    // Show the substituted tile
                     const subTile = createTile(subValue);
                     eq.appendChild(subTile);
                 } 
-                else if (tok.type === 'number' && i === varIndex - 1 && hasCoeff) {
+                else if (tok.type === 'number' && i === varIndex - 1 && hasCoeff && isNumber) {
                     continue; // skip original coefficient
                 } 
                 else if (tok.type === 'op') {
@@ -278,7 +277,7 @@
             display.appendChild(eq);
         }
 
-        function updateSteps(subValue, isNumberSub) {
+        function updateSteps(subValue, isNumber) {
             const tokens = tokenize(currentExpr);
             const container = document.getElementById('steps-container');
             container.innerHTML = '';
@@ -298,12 +297,12 @@
             for (let i = 0; i < tokens.length; i++) {
                 const tok = tokens[i];
                 if (tok.type === 'var') {
-                    if (hasCoeff) {
+                    if (hasCoeff && isNumber) {
                         step1 += tokens[i-1].value + " × " + subValue;
                     } else {
                         step1 += subValue;
                     }
-                } else if (tok.type === 'number' && i === varIndex - 1 && hasCoeff) {
+                } else if (tok.type === 'number' && i === varIndex - 1 && hasCoeff && isNumber) {
                     continue;
                 } else if (tok.type === 'op') {
                     step1 += " " + tok.value + " ";
@@ -314,7 +313,7 @@
 
             renderStep(step1.trim());
 
-            if (!isNumberSub) return;
+            if (!isNumber) return;
 
             const val = parseInt(subValue);
             const coeff = hasCoeff ? parseInt(tokens[varIndex-1].value) : 1;
@@ -348,7 +347,7 @@
             currentExpr = PRESETS[currentIndex];
             currentSubTile = null;
 
-            updateEquationDisplay('x');   // start with x
+            updateEquationDisplay('x', false);   // start with x, no ×
             document.getElementById('steps-container').innerHTML = '';
 
             document.querySelectorAll('.tile').forEach(t => t.classList.remove('faded'));
