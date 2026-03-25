@@ -33,7 +33,7 @@
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
         
-        .subtitle { text-align: center; color: #64748b; margin-bottom: 32px; }
+        .subtitle { text-align: center; color: #64748b; margin-bottom: 32px; font-size: 1.1rem; }
         
         #tile-row {
             display: flex; justify-content: center; gap: 16px;
@@ -51,7 +51,7 @@
             box-shadow: 6px 6px 12px -4px rgb(15 23 42 / 0.2),
                         inset 0 -3px 4px rgba(255,255,255,0.4);
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.4s ease;
             user-select: none;
         }
         .tile:hover { transform: scale(1.08) translateY(-2px); }
@@ -95,10 +95,12 @@
         
         .step .equals { width: 52px; text-align: right; margin-right: 24px; color: #64748b; font-weight: 600; }
         
+        .controls { display: flex; justify-content: center; margin-top: 30px; }
+        
         button {
             background: linear-gradient(to right, #0ea5e9, #8b5cf6);
-            color: white; border: none; padding: 16px 36px;
-            font-size: 1.25rem; font-weight: 600; border-radius: 9999px;
+            color: white; border: none; padding: 16px 52px;
+            font-size: 1.4rem; font-weight: 600; border-radius: 9999px;
             cursor: pointer;
         }
         button:hover { transform: translateY(-3px); }
@@ -120,24 +122,12 @@
         </div>
         
         <div class="controls">
-            <button id="new-equation-btn">Next Equation</button>
+            <button id="new-equation-btn">Next Expression</button>
         </div>
     </div>
 
     <script>
-        // Simple to Complex sequence
-        const PRESETS = [
-            "x",
-            "x + 2",
-            "x - 3",
-            "2 + x",
-            "3x",
-            "3x + 2",
-            "2x + 5",
-            "5x - 2",
-            "x + 5",
-            "10 - x"
-        ];
+        const PRESETS = ["x", "x + 2", "x - 3", "2 + x", "3x", "3x + 2", "2x + 5", "5x - 2", "x + 5", "10 - x"];
         
         const COLORS = {
             'x': { bg: '#0ea5e9', text: '#fff' },
@@ -153,7 +143,7 @@
 
         let currentIndex = 0;
         let currentExpr = PRESETS[0];
-        let currentSubTile = null;
+        let currentSubTile = null;   // the faded tile in the row
         let animating = false;
 
         function tokenize(expr) {
@@ -183,36 +173,65 @@
             if (animating) return;
             animating = true;
 
-            const clickedTile = e.currentTarget;
-            const subValue = clickedTile.textContent;
+            const newTile = e.currentTarget;
+            const subValue = newTile.textContent;
             const isNumber = /^[0-9]$/.test(subValue);
-
-            if (currentSubTile && currentSubTile !== clickedTile) {
-                currentSubTile.classList.remove('faded');
-            }
-            clickedTile.classList.add('faded');
-            currentSubTile = clickedTile;
 
             const varTile = document.querySelector('.equation .tile');
             if (!varTile) { animating = false; return; }
 
-            const sourceRect = clickedTile.getBoundingClientRect();
+            // === 1. Animate the OLD substituted tile BACK to the row ===
+            if (currentSubTile && currentSubTile !== newTile) {
+                const oldRect = varTile.getBoundingClientRect();
+                const homeRect = currentSubTile.getBoundingClientRect();
+
+                const returner = varTile.cloneNode(true);
+                returner.style.position = 'fixed';
+                returner.style.left = oldRect.left + 'px';
+                returner.style.top = oldRect.top + 'px';
+                returner.style.width = oldRect.width + 'px';
+                returner.style.height = oldRect.height + 'px';
+                returner.style.zIndex = 999;
+                returner.style.transition = 'all 0.55s cubic-bezier(0.4, 0, 0.2, 1)';
+                document.body.appendChild(returner);
+
+                // Fly back
+                requestAnimationFrame(() => {
+                    returner.style.left = homeRect.left + 'px';
+                    returner.style.top = homeRect.top + 'px';
+                    varTile.style.opacity = '0';
+                });
+
+                setTimeout(() => {
+                    currentSubTile.classList.remove('faded');
+                    document.body.removeChild(returner);
+                    varTile.style.opacity = '1';
+                    flyNewTileIn(newTile, subValue, isNumber, varTile);
+                }, 580);
+            } else {
+                // No previous tile — just fly the new one in
+                flyNewTileIn(newTile, subValue, isNumber, varTile);
+            }
+        }
+
+        function flyNewTileIn(newTile, subValue, isNumber, varTile) {
+            const sourceRect = newTile.getBoundingClientRect();
             const targetRect = varTile.getBoundingClientRect();
 
-            const flyer = clickedTile.cloneNode(true);
+            const flyer = newTile.cloneNode(true);
             flyer.style.position = 'fixed';
-            flyer.style.left = `${sourceRect.left}px`;
-            flyer.style.top = `${sourceRect.top}px`;
-            flyer.style.width = `${sourceRect.width}px`;
-            flyer.style.height = `${sourceRect.height}px`;
-            flyer.style.zIndex = '1000';
+            flyer.style.left = sourceRect.left + 'px';
+            flyer.style.top = sourceRect.top + 'px';
+            flyer.style.width = sourceRect.width + 'px';
+            flyer.style.height = sourceRect.height + 'px';
+            flyer.style.zIndex = 1000;
             flyer.style.transition = 'all 0.65s cubic-bezier(0.4, 0, 0.2, 1)';
             document.body.appendChild(flyer);
 
             requestAnimationFrame(() => {
-                flyer.style.left = `${targetRect.left}px`;
-                flyer.style.top = `${targetRect.top}px`;
-                varTile.style.opacity = '0.25';
+                flyer.style.left = targetRect.left + 'px';
+                flyer.style.top = targetRect.top + 'px';
+                varTile.style.opacity = '0.3';
             });
 
             setTimeout(() => {
@@ -220,7 +239,7 @@
                 varTile.style.backgroundColor = COLORS[subValue].bg;
                 varTile.style.color = COLORS[subValue].text;
                 varTile.style.opacity = '1';
-                varTile.style.transform = 'scale(1.2)';
+                varTile.style.transform = 'scale(1.15)';
 
                 updateEquationDisplay(subValue, isNumber);
                 updateSteps(subValue, isNumber);
@@ -234,6 +253,7 @@
             }, 650);
         }
 
+        // Rest of the functions remain the same
         function updateEquationDisplay(subValue, isNumber) {
             const display = document.getElementById('equation-display');
             display.innerHTML = '';
@@ -256,33 +276,28 @@
                 const tok = tokens[i];
                 if (tok.type === 'var') {
                     if (hasCoeff && isNumber) {
-                        const coeffSpan = document.createElement('span');
-                        coeffSpan.textContent = tokens[i-1].value;
-                        eq.appendChild(coeffSpan);
+                        const coeff = document.createElement('span');
+                        coeff.textContent = tokens[i-1].value;
+                        eq.appendChild(coeff);
 
                         const times = document.createElement('span');
                         times.className = 'times';
                         times.textContent = '×';
                         eq.appendChild(times);
                     }
-                    const subTile = createTile(subValue);
-                    eq.appendChild(subTile);
-                } 
-                else if (tok.type === 'number' && i === varIndex - 1 && hasCoeff && isNumber) {
+                    eq.appendChild(createTile(subValue));
+                } else if (tok.type === 'number' && i === varIndex - 1 && hasCoeff && isNumber) {
                     continue;
-                } 
-                else if (tok.type === 'op') {
-                    const opSpan = document.createElement('span');
-                    opSpan.textContent = " " + tok.value + " ";
-                    eq.appendChild(opSpan);
-                } 
-                else {
+                } else if (tok.type === 'op') {
+                    const op = document.createElement('span');
+                    op.textContent = " " + tok.value + " ";
+                    eq.appendChild(op);
+                } else {
                     const span = document.createElement('span');
                     span.textContent = tok.value;
                     eq.appendChild(span);
                 }
             }
-
             display.appendChild(eq);
         }
 
@@ -306,11 +321,8 @@
             for (let i = 0; i < tokens.length; i++) {
                 const tok = tokens[i];
                 if (tok.type === 'var') {
-                    if (hasCoeff && isNumber) {
-                        step1 += tokens[i-1].value + " × " + subValue;
-                    } else {
-                        step1 += subValue;
-                    }
+                    if (hasCoeff && isNumber) step1 += tokens[i-1].value + " × " + subValue;
+                    else step1 += subValue;
                 } else if (tok.type === 'number' && i === varIndex - 1 && hasCoeff && isNumber) {
                     continue;
                 } else if (tok.type === 'op') {
@@ -333,12 +345,10 @@
                 const numTok = tokens.find((t, idx) => t.type === 'number' && idx !== (varIndex - 1));
                 const otherNum = numTok ? parseInt(numTok.value) : 0;
 
-                if (coeff !== 1) renderStep(`${product} ${opTok.value} ${otherNum}`);
-
+                if (coeff !== 1) renderStep(product + " " + opTok.value + " " + otherNum);
                 const final = (opTok.value === '+') 
                     ? (varIndex > 1 ? otherNum + val : product + otherNum)
                     : (varIndex > 1 ? otherNum - val : product - otherNum);
-
                 renderStep(final);
             } else if (coeff !== 1) {
                 renderStep(product);
